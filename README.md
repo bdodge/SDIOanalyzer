@@ -8,6 +8,11 @@ borrows heavily from [ewfuentes analyzer](https://github.com/ewfuentes/SaleaeSDI
 for settings and structure, but is a complete rewrite of the core
 analysis machine.
 
+## Using a pre-built plugin
+
+The Product/<OS>/ directories contained built plugin libraries. If
+you find one there that matches your OS, you can skip to "Using"
+
 ## Building
 
 You can use the Xcode project here or the "build_analyzer.py" script. Both are

@@ -1,4 +1,6 @@
 Build/
+debug/
+release/
 
 *.bak
 
@@ -17,7 +19,7 @@ Build/
 
 # Compiled Dynamic libraries
 *.so
-*.dylib
+#*.dylib
 *.dll
 
 # Fortran module files

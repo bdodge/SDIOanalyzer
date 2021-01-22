@@ -13,6 +13,10 @@ analysis machine.
 You can use the Xcode project here or the "build_analyzer.py" script. Both are
 tested on MacOS Catalina. Linux might work with the script.
 
+Note that the build depends on you having the Saleae supplied AnalyzerSDK
+installed at the same directoy level as this code. This is a bit different
+than how Saleae lays out their sample.
+
 ## Using
 
 Install the plugin by pointing Logic to the Analyzer path using "Preferences" menu.

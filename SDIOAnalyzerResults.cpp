@@ -137,8 +137,8 @@ void SDIOAnalyzerResults::GenerateExportFile( const char* file, DisplayBase disp
 		char time_str[128];
 		AnalyzerHelpers::GetTimeString( frame.mStartingSampleInclusive, trigger_sample, sample_rate, time_str, 128 );
 
-		char number_str[128];
-		AnalyzerHelpers::GetNumberString((frame.mData1 >> 32), display_base, 32, number_str, 128 );
+		char number_str1[128];
+		AnalyzerHelpers::GetNumberString((frame.mData1 >> 32), display_base, 32, number_str1, 128 );
 
 		file_stream << time_str << ",";
 
@@ -152,41 +152,40 @@ void SDIOAnalyzerResults::GenerateExportFile( const char* file, DisplayBase disp
         }
         else if (frame.mType == SDIOAnalyzer::FRAME_CMD)
 		{
-			file_stream << "CMD:" << number_str;
+			file_stream << "CMD:" << number_str1;
 		}
 		else if (frame.mType == SDIOAnalyzer::FRAME_ARG){
-			file_stream << "ARG:" << number_str;
+			file_stream << "ARG:" << number_str1;
 		}
         else if (frame.mType == SDIOAnalyzer::FRAME_RESP_R1)
         {
-            file_stream << "R1:" << number_str;
+            file_stream << "R1:" << number_str1;
         }
 		else if (frame.mType == SDIOAnalyzer::FRAME_RESP_R2)
 		{
-			file_stream << "R2:" << number_str;
-            AnalyzerHelpers::GetNumberString((frame.mData1 >> 32), display_base, 32, number_str, 128 );
-            file_stream << "," << number_str;
-            AnalyzerHelpers::GetNumberString((frame.mData1 & 0xffffffff), display_base, 32, number_str, 128 );
-            file_stream << "," << number_str;
-            AnalyzerHelpers::GetNumberString((frame.mData2 >> 32), display_base, 32, number_str, 128 );
-            file_stream << "," << number_str;
-            AnalyzerHelpers::GetNumberString((frame.mData2 & 0xffffffff), display_base, 32, number_str, 128 );
+			file_stream << "R2:" << number_str1;
+            AnalyzerHelpers::GetNumberString((frame.mData1 & 0xffffffff), display_base, 32, number_str1, 128 );
+            file_stream << "," << number_str1;
+            AnalyzerHelpers::GetNumberString((frame.mData2 >> 32), display_base, 32, number_str1, 128 );
+            file_stream << "," << number_str1;
+            AnalyzerHelpers::GetNumberString((frame.mData2 & 0xffffffff), display_base, 32, number_str1, 128 );
+            file_stream << "," << number_str1;
 		}
         else if (frame.mType == SDIOAnalyzer::FRAME_RESP_R3)
         {
-            file_stream << "R3:" << number_str;
+            file_stream << "R3:" << number_str1;
         }
         else if (frame.mType == SDIOAnalyzer::FRAME_RESP_R4)
         {
-            file_stream << "R4:" << number_str;
+            file_stream << "R4:" << number_str1;
         }
         else if (frame.mType == SDIOAnalyzer::FRAME_RESP_R7)
         {
-            file_stream << "R7:" << number_str;
+            file_stream << "R7:" << number_str1;
         }
 		else if (frame.mType == SDIOAnalyzer::FRAME_CRC)
 		{
-			file_stream << "CRC:" << number_str;
+			file_stream << "CRC:" << number_str1;
 		}
 
 		file_stream << std::endl;

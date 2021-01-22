@@ -120,8 +120,11 @@ void SDIOAnalyzer::PacketStateMachine()
             break;
         }
          */
+        // find next edge of cmd
+        //
 		mCmd->AdvanceToNextEdge();
         sample = mCmd->GetSampleNumber();
+            
         if (sample < prevsample)
         {
             //printf("Moved backward?\n");
@@ -131,25 +134,32 @@ void SDIOAnalyzer::PacketStateMachine()
         prevsample = mClock->GetSampleNumber();
         if (prevsample > sample)
         {
+            // if clock is ahead of cmd, can't advance clock
             //printf("Clock ahead of sample?\n");
             packetState = FINISHED;
             break;
         }
-        // if clock is ahead of cmd, can't advance clock
+        // sync clock to cmd
 		mClock->AdvanceToAbsPosition(sample);
-		// advance to next falling edge of CMD
-		//std::cout << "cmd is " << mCmd->GetBitState() << " at edge" << "\n";
-		// go to clock edge where CMD is sampled
-		// (falling edge normallt rising edge in HS mode (TODO))
-		if (mClock->GetBitState() == BIT_HIGH) {
-			mClock->AdvanceToNextEdge();
-		}
-		sample = mClock->GetSampleNumber();
-		mCmd->AdvanceToAbsPosition(sample);
-		// from here on in the clock is skipped twice to get to the next active edge
-		sample = mClock->GetSampleNumber();
-		SyncToSample(sample);
-		mClock->AdvanceToNextEdge(); // low-to-high here
+        if (mClock->GetBitState() == BIT_HIGH) {
+            // make sure its a falling edge were at
+            mClock->AdvanceToNextEdge();
+        }
+        sample = mClock->GetSampleNumber();
+        
+        // and sample cmd at the low edge
+        mCmd->AdvanceToAbsPosition(sample);
+
+        // now go forward to rising edge
+        mClock->AdvanceToNextEdge(); // clock goes low-to-high here
+        {
+            U64 ss = mClock->GetBitState();
+            if (ss != BIT_HIGH)
+                printf("wanted high clock\n");
+        }
+		// from here on in the clock is advanced once to get to the next active edge
+        // and cmd is samples, and then the clock advanced to the rising edge
+        //
 		if (mCmd->GetBitState() == BIT_LOW)
 		{
             int i;
@@ -160,8 +170,8 @@ void SDIOAnalyzer::PacketStateMachine()
             valueIndex = 0;
 
             //printf("next cmd at %llu\n", sample);
+            packetState = PACKET_DIR;
 			startSample = sample;
-			packetState = PACKET_DIR;
 			break;
 		}
 		// found a back edge, keep going waiting for high-to-low

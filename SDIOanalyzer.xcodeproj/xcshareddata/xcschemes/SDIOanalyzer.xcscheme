@@ -42,8 +42,7 @@
       allowLocationSimulation = "YES">
       <PathRunnable
          runnableDebuggingMode = "0"
-         BundleIdentifier = "com.saleae.saleae"
-         FilePath = "/Users/bdodge/saleae/Logic2.app">
+         FilePath = "/Applications/Logic.app">
       </PathRunnable>
    </LaunchAction>
    <ProfileAction

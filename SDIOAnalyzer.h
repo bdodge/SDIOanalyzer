@@ -41,7 +41,7 @@ public:
 	virtual const char *GetAnalyzerName() const;
 	virtual bool NeedsRerun();
 
-	enum frameTypes {FRAME_DIR, FRAME_CMD, FRAME_ARG, FRAME_RESP_R1, FRAME_RESP_R2,
+	enum frameTypes {FRAME_HOST, FRAME_CARD, FRAME_CMD, FRAME_ARG, FRAME_RESP_R1, FRAME_RESP_R2,
         FRAME_RESP_R3, FRAME_RESP_R4, FRAME_RESP_R7, FRAME_CRC};
     enum responseTypes {R1, R2, R3, R4, R7};
 

@@ -90,13 +90,12 @@ void SDIOAnalyzer::SyncToSample(U64 sample)
 void SDIOAnalyzer::AddFrame(U64 fromsample, U64 tosample, frameTypes type, U32 data[4])
 {
 	Frame frame;
-    int i;
-    
+
 	frame.mStartingSampleInclusive = fromsample;
 	frame.mEndingSampleInclusive = tosample;
 	frame.mFlags = 0;
-    for (i = 0; i < 4; i++)
-        frame.mData[i] = data[i];
+	frame.mData1 = ((U64)data[0] << 32) | data[1];
+	frame.mData2 = ((U64)data[2] << 32) | data[2];
 	frame.mType = type;
 	mResults->AddFrame(frame);
 
@@ -107,7 +106,7 @@ void SDIOAnalyzer::AddFrame(U64 fromsample, U64 tosample, frameTypes type, U32 d
 void SDIOAnalyzer::PacketStateMachine()
 {
     U64 prevsample;
-    
+
     //printf("packetState %d\n", packetState);
 	switch (packetState)
 	{
@@ -154,12 +153,12 @@ void SDIOAnalyzer::PacketStateMachine()
 		if (mCmd->GetBitState() == BIT_LOW)
 		{
             int i;
-            
+
             for (i = 0; i < 4; i++)
                 uValue[i] = 0;
             valueBits = 0;
             valueIndex = 0;
-            
+
             //printf("next cmd at %llu\n", sample);
 			startSample = sample;
 			packetState = PACKET_DIR;
@@ -181,8 +180,8 @@ void SDIOAnalyzer::PacketStateMachine()
 		mClock->AdvanceToNextEdge(); // and rising here
 		//printf("dirbit is %d at sample %d\n", packetDirection, sample);
         sample = mClock->GetSampleNumber();
-            
-		AddFrame(startSample, sample, FRAME_DIR, uValue);
+
+		AddFrame(startSample, sample, uValue[0] ? FRAME_HOST : FRAME_CARD, uValue);
 
 		// get 6 bits of command
 		uValue[0] = 0;
@@ -202,19 +201,19 @@ void SDIOAnalyzer::PacketStateMachine()
 		// get 32 bits of argument
 		startSample = sample;
         packetCount = 32;
-            
+
         if (packetDirection)
         {
             //  host->card, 32 bits of argument
             packetNextState = ARG;
-            
+
             // setup expected response length now based on command
             //
             // CMD2, CMD9 and CMD10 respond with R2 of 136 bits
             // others with R1/3/4/5 which are 48 butes
             //
             respLength = 32;
-            
+
             switch (uValue[0])
             {
             case 2:
@@ -344,7 +343,7 @@ U32 SDIOAnalyzer::GenerateSimulationData( U64 minimum_sample_index, U32 device_s
 {
     if (!mSimulationInitilized)
         mSimulationDataGenerator.Initialize(device_sample_rate, &*mSettings);
-    
+
     return mSimulationDataGenerator.GenerateSimulationData(minimum_sample_index, device_sample_rate, simulation_channels);
 }
 

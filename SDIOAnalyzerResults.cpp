@@ -50,72 +50,70 @@ void SDIOAnalyzerResults::GenerateBubbleText( U64 frame_index, Channel& channel,
 
     switch (frame.mType)
     {
-    case SDIOAnalyzer::FRAME_DIR:
+    case SDIOAnalyzer::FRAME_HOST:
 	{
-		if (frame.mData[0])
-		{
-			AddResultString("H");
-			AddResultString("Host");
-			AddResultString("Host ->");
-		}
-		else
-		{
-			AddResultString("C");
-			AddResultString("Card");
-			AddResultString("Card ->");
-		}
+		AddResultString("H");
+		AddResultString("Host");
+		AddResultString("Host ->");
 	}
+    break;
+    case SDIOAnalyzer::FRAME_CARD:
+    {
+        AddResultString("C");
+		AddResultString("Card");
+		AddResultString("Card ->");
+    }
     break;
     case  SDIOAnalyzer::FRAME_CMD:
 	{
-		AnalyzerHelpers::GetNumberString( frame.mData[0], Decimal, 6, number_str1, 128 );
+		AnalyzerHelpers::GetNumberString( (frame.mData1 >> 32), Decimal, 6, number_str1, 128 );
         AddResultString(number_str1);
 		AddResultString("CMD ", number_str1);
 	}
     break;
     case SDIOAnalyzer::FRAME_ARG:
 	{
-		AnalyzerHelpers::GetNumberString( frame.mData[0], display_base, 32, number_str1, 128 );
+		AnalyzerHelpers::GetNumberString( (frame.mData1 >> 32), display_base, 32, number_str1, 128 );
 		AddResultString("ARG ", number_str1);
 	}
     break;
     case SDIOAnalyzer::FRAME_RESP_R2:
 	{
-		AnalyzerHelpers::GetNumberString (frame.mData[0], display_base, 32, number_str1, 128);
-		AnalyzerHelpers::GetNumberString (frame.mData[1], display_base, 32, number_str2, 128);
-        AnalyzerHelpers::GetNumberString (frame.mData[2], display_base, 32, number_str3, 128);
-        AnalyzerHelpers::GetNumberString (frame.mData[3], display_base, 32, number_str4, 128);
+		AnalyzerHelpers::GetNumberString ((frame.mData1 >> 32), display_base, 32, number_str1, 128);
+		AnalyzerHelpers::GetNumberString ((frame.mData1 & 0xffffffff), display_base, 32, number_str2, 128);
+        AnalyzerHelpers::GetNumberString ((frame.mData2 >> 32), display_base, 32, number_str3, 128);
+        AnalyzerHelpers::GetNumberString ((frame.mData2 & 0xffffffff), display_base, 32, number_str4, 128);
 		AddResultString("R2: ", number_str1, number_str2, number_str3, number_str4);
 
 	}
     break;
     case SDIOAnalyzer::FRAME_RESP_R1:
     {
-        AnalyzerHelpers::GetNumberString (frame.mData[0], display_base, 32, number_str1, 128);
+        AnalyzerHelpers::GetNumberString ((frame.mData1 >> 32), display_base, 32, number_str1, 128);
         AddResultString("R1: ", number_str1);
     }
     break;
     case SDIOAnalyzer::FRAME_RESP_R3:
     {
-        AnalyzerHelpers::GetNumberString (frame.mData[0], display_base, 32, number_str1, 128);
+        AnalyzerHelpers::GetNumberString ((frame.mData1 >> 32), display_base, 32, number_str1, 128);
         AddResultString("R3: ", number_str1);
     }
     break;
     case SDIOAnalyzer::FRAME_RESP_R4:
     {
-        AnalyzerHelpers::GetNumberString (frame.mData[0], display_base, 32, number_str1, 128);
+        AnalyzerHelpers::GetNumberString ((frame.mData1 >> 32), display_base, 32, number_str1, 128);
         AddResultString("R4: ", number_str1);
     }
     break;
     case SDIOAnalyzer::FRAME_RESP_R7:
     {
-        AnalyzerHelpers::GetNumberString (frame.mData[0], display_base, 32, number_str1, 128);
+        AnalyzerHelpers::GetNumberString ((frame.mData1 >> 32), display_base, 32, number_str1, 128);
         AddResultString("R7: ", number_str1);
     }
     break;
     case SDIOAnalyzer::FRAME_CRC:
 	{
-		AnalyzerHelpers::GetNumberString( frame.mData[0], display_base, 7, number_str1, 128 );
+		AnalyzerHelpers::GetNumberString((frame.mData1 >> 32), display_base, 7, number_str1, 128 );
 		AddResultString("CRC ", number_str1);
 	}
     break;
@@ -140,20 +138,19 @@ void SDIOAnalyzerResults::GenerateExportFile( const char* file, DisplayBase disp
 		AnalyzerHelpers::GetTimeString( frame.mStartingSampleInclusive, trigger_sample, sample_rate, time_str, 128 );
 
 		char number_str[128];
-		AnalyzerHelpers::GetNumberString( frame.mData[0], display_base, 32, number_str, 128 );
+		AnalyzerHelpers::GetNumberString((frame.mData1 >> 32), display_base, 32, number_str, 128 );
 
 		file_stream << time_str << ",";
 
-		if (frame.mType == SDIOAnalyzer::FRAME_DIR)
+		if (frame.mType == SDIOAnalyzer::FRAME_HOST)
 		{
-			file_stream << "DIR:";
-			if (frame.mData[0]){
-				file_stream << "from Host";
-			}else{
-				file_stream << "from Slave";
-			}
+			file_stream << "DIR:from Host";
 		}
-		else if (frame.mType == SDIOAnalyzer::FRAME_CMD)
+        if (frame.mType == SDIOAnalyzer::FRAME_CARD)
+        {
+            file_stream << "DIR:from Card";
+        }
+        else if (frame.mType == SDIOAnalyzer::FRAME_CMD)
 		{
 			file_stream << "CMD:" << number_str;
 		}
@@ -167,12 +164,13 @@ void SDIOAnalyzerResults::GenerateExportFile( const char* file, DisplayBase disp
 		else if (frame.mType == SDIOAnalyzer::FRAME_RESP_R2)
 		{
 			file_stream << "R2:" << number_str;
-            AnalyzerHelpers::GetNumberString( frame.mData[1], display_base, 32, number_str, 128 );
+            AnalyzerHelpers::GetNumberString((frame.mData1 >> 32), display_base, 32, number_str, 128 );
             file_stream << "," << number_str;
-            AnalyzerHelpers::GetNumberString( frame.mData[2], display_base, 32, number_str, 128 );
+            AnalyzerHelpers::GetNumberString((frame.mData1 & 0xffffffff), display_base, 32, number_str, 128 );
             file_stream << "," << number_str;
-            AnalyzerHelpers::GetNumberString( frame.mData[3], display_base, 32, number_str, 128 );
+            AnalyzerHelpers::GetNumberString((frame.mData2 >> 32), display_base, 32, number_str, 128 );
             file_stream << "," << number_str;
+            AnalyzerHelpers::GetNumberString((frame.mData2 & 0xffffffff), display_base, 32, number_str, 128 );
 		}
         else if (frame.mType == SDIOAnalyzer::FRAME_RESP_R3)
         {

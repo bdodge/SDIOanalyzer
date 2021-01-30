@@ -106,7 +106,8 @@ void SDIOAnalyzer::AddFrame(U64 fromsample, U64 tosample, frameTypes type, U32 d
 void SDIOAnalyzer::PacketStateMachine()
 {
     U64 prevsample;
-
+    bool donteatedge;
+    
     //printf("packetState %d\n", packetState);
 	switch (packetState)
 	{
@@ -139,24 +140,66 @@ void SDIOAnalyzer::PacketStateMachine()
             packetState = FINISHED;
             break;
         }
+        donteatedge = false;
+
+        if (BIT_HIGH == mCmd->GetBitState())
+            break;
+
         // sync clock to cmd
 		mClock->AdvanceToAbsPosition(sample);
         if (mClock->GetBitState() == BIT_HIGH) {
             // make sure its a falling edge were at
             mClock->AdvanceToNextEdge();
+            sample = mClock->GetSampleNumber();
         }
-        sample = mClock->GetSampleNumber();
+        else {
+            U64 clk1, clk2, clk3;
+            
+            // it is possible that cmd went low before a low-to-high
+            // clock which is valid, and we want to sample at the high-to-low
+            // and it is also possible they both went low at the same time
+            // so if we look ahead at clk and it goes high before 1/2 its cycle
+            // then go forward two clock edges to the the real high-to-low
+            //
+            clk1 = mClock->GetSampleNumber();
+            mClock->AdvanceToNextEdge();           // clock goes low-to-high here
+            if (BIT_HIGH != mClock->GetBitState())
+                printf("expected high clock\n");
+            clk2 = mClock->GetSampleNumber();
+            clk3 = mClock->GetSampleOfNextEdge();   // clock goes high to low again here, could be our sample also
+            
+            // if the edge-to-edge time of the whole clock high period is longer than the distance
+            // from cmd going low and the next clock going high (with some fudge taken out) then
+            // then need to absorb this clock transition
+            //
+            if ((3*(clk3 - clk2)/4) < (clk2 - clk1)) {
+                // nah, the the clock goes high pretty long after cmd drops, this is a case
+                // where cmd and clock dropped at the same time most likely
+                //
+                donteatedge = true;
+                sample = clk1;
+            }
+            else {
+                // yeah absorb a clock and sample on the next low edge
+                //
+                sample = clk2;
+            }
+        }
         
         // and sample cmd at the low edge
         mCmd->AdvanceToAbsPosition(sample);
 
-        // now go forward to rising edge
-        mClock->AdvanceToNextEdge(); // clock goes low-to-high here
+        if (donteatedge) {
+            // now go forward to rising edge
+            mClock->AdvanceToNextEdge(); // clock goes low-to-high here
+        }
+        /*
         {
             U64 ss = mClock->GetBitState();
             if (ss != BIT_HIGH)
                 printf("wanted high clock\n");
         }
+        */
 		// from here on in the clock is advanced once to get to the next active edge
         // and cmd is samples, and then the clock advanced to the rising edge
         //

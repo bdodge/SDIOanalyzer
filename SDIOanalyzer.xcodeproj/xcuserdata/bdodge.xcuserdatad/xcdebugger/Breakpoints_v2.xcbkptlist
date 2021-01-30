@@ -7,15 +7,15 @@
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            uuid = "67BD46D8-2BDB-4043-A733-8B55F588942B"
+            uuid = "9A2AC6D1-9627-4CC5-A6BA-1C7E5BB7DD5F"
             shouldBeEnabled = "No"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "SDIOAnalyzer.cpp"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "181"
-            endingLineNumber = "181"
+            startingLineNumber = "115"
+            endingLineNumber = "115"
             landmarkName = "SDIOAnalyzer::PacketStateMachine()"
             landmarkType = "7">
          </BreakpointContent>
